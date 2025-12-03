@@ -490,6 +490,7 @@
             <button class="btn-primary" onclick="loadIndicators()">Cargar Indicadores</button>
             <button class="btn-primary" onclick="loadStudents()">Cargar Estudiantes</button>
             <button class="btn-warning" onclick="manualSave()">💾 Guardar Ahora</button>
+            <button class="btn-success" onclick="saveToGoogleSheets()">☁️ Guardar en Google Sheets</button>
             <button class="btn-primary" onclick="clearStudents()">Limpiar Todo</button>
             <button class="btn-success" onclick="downloadExcel()">📥 Descargar Excel</button>
             <button class="btn-info" onclick="generatePDF()">📄 Generar PDF</button>
@@ -518,6 +519,7 @@
         const NUM_STUDENTS = 35;
         const NUM_INDICATORS = 6;
         const STORAGE_KEY = 'escalaValoracion_v1'; // Clave única para evitar conflictos
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzE-tecphJnhCvd3i7ySleJO8ZgT2OCpkaBKCV4wddQaTyfa1n90BoDcvjnwy9STC7w/exec';
         let indicatorNames = ['Indicador 1', 'Indicador 2', 'Indicador 3', 'Indicador 4', 'Indicador 5', 'Indicador 6'];
         let autoSaveTimer;
 
@@ -576,6 +578,65 @@
                 alert('✓ Datos guardados exitosamente\n\nLos datos se mantienen aunque cierres esta página.');
             } else {
                 alert('✗ Error al guardar los datos\n\nPor favor, intenta de nuevo.');
+            }
+        }
+
+        // Función para guardar en Google Sheets
+        async function saveToGoogleSheets() {
+            // Validar que haya datos para guardar
+            const tema = document.getElementById('tema').value.trim();
+            if (!tema) {
+                alert('⚠️ Por favor, completa al menos el campo TEMA antes de guardar en Google Sheets.');
+                return;
+            }
+
+            // Mostrar indicador de carga
+            const saveBtn = event.target;
+            const originalText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '⏳ Guardando...';
+            saveBtn.disabled = true;
+
+            const data = {
+                centro: document.getElementById('centro').value,
+                tema: document.getElementById('tema').value,
+                actividad: document.getElementById('actividad').value,
+                asignatura: document.getElementById('asignatura').value,
+                valor: document.getElementById('valor').value,
+                profesor: document.getElementById('profesor').value,
+                indicatorNames: indicatorNames,
+                students: []
+            };
+
+            for (let i = 1; i <= NUM_STUDENTS; i++) {
+                const studentName = document.getElementById(`student_${i}`)?.value || '';
+                const row = document.getElementById('tableBody').children[i - 1];
+                if (row) {
+                    const selects = row.querySelectorAll('select');
+                    const scores = Array.from(selects).map(s => s.value);
+                    data.students.push({ name: studentName, scores: scores });
+                }
+            }
+
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                // Con mode: 'no-cors', no podemos leer la respuesta, pero si no hay error, asumimos éxito
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+                alert('✓ Datos enviados a Google Sheets exitosamente\n\nRevisa tu hoja de cálculo para confirmar.');
+                
+            } catch (error) {
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+                alert('✗ Error al conectar con Google Sheets:\n\n' + error.message + '\n\nVerifica que la URL del script sea correcta.');
+                console.error('Error:', error);
             }
         }
 
