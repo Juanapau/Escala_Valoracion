@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escala de Valoración</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            padding: 0;
+            margin: 0;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 100%;
+            background: white;
+            padding: 10px;
+            margin: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 20px;
+            }
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            h1 {
+                font-size: 2rem;
+                margin-bottom: 20px;
+            }
+        }
+
+        .header-section {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        @media (min-width: 768px) {
+            .header-section {
+                margin-bottom: 20px;
+                padding: 15px;
+            }
+        }
+
+        .header-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        @media (min-width: 768px) {
+            .header-row {
+                grid-template-columns: 150px 1fr;
+                gap: 10px;
+            }
+        }
+
+        .header-label {
+            font-weight: bold;
+        }
+
+        .header-input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .scale-section {
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+        }
+
+        .scale-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .scale-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            max-width: 600px;
+        }
+
+        .scale-item {
+            padding: 5px 10px;
+            text-align: center;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .escala-excelente {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .escala-bueno {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .escala-suficiente {
+            background-color: #FF00FF;
+            color: white;
+        }
+
+        .escala-insuficiente {
+            background-color: #FFA500;
+            color: white;
+        }
+
+        .buttons-section {
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        @media (min-width: 768px) {
+            .buttons-section {
+                display: flex;
+                flex-wrap: wrap;
+            }
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            width: 100%;
+        }
+
+        @media (min-width: 768px) {
+            button {
+                width: auto;
+                padding: 10px 20px;
+            }
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+        .btn-warning {
+            background-color: #ffc107;
+            color: #333;
+        }
+
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+
+        .btn-info {
+            background-color: #17a2b8;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background-color: #138496;
+        }
+
+        .paste-area {
+            margin-bottom: 15px;
+        }
+
+        #pasteInput {
+            width: 100%;
+            min-height: 50px;
+            padding: 10px;
+            border: 2px dashed #007bff;
+            border-radius: 5px;
+            font-size: 13px;
+        }
+
+        #pasteIndicators {
+            width: 100%;
+            min-height: 60px;
+            padding: 10px;
+            border: 2px dashed #28a745;
+            border-radius: 5px;
+            font-size: 13px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            max-height: 600px;
+            overflow-y: auto;
+            position: relative;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        @media (max-width: 767px) {
+            .table-wrapper {
+                max-height: 400px;
+            }
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        @media (min-width: 768px) {
+            table {
+                font-size: 12px;
+            }
+        }
+
+        thead {
+            background-color: #6c757d;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        th {
+            background-color: #6c757d;
+            color: white;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        td {
+            border: 1px solid #ddd;
+            padding: 6px;
+            text-align: center;
+            background-color: white;
+        }
+
+        @media (min-width: 768px) {
+            th, td {
+                padding: 8px;
+            }
+        }
+
+        td:first-child,
+        td:nth-child(2) {
+            position: sticky;
+            left: 0;
+            z-index: 10;
+            background-color: white;
+        }
+
+        td:nth-child(2) {
+            left: 45px;
+        }
+
+        tr:nth-child(even) td:first-child,
+        tr:nth-child(even) td:nth-child(2) {
+            background-color: #f8f9fa;
+        }
+
+        th:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 200;
+        }
+
+        th:nth-child(2) {
+            position: sticky;
+            left: 45px;
+            z-index: 200;
+        }
+
+        .student-name {
+            text-align: left;
+            min-width: 150px;
+        }
+
+        .indicator-cell {
+            min-width: 100px;
+            position: relative;
+        }
+
+        select {
+            width: 100%;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .select-excelente {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .select-bueno {
+            background-color: #2196F3;
+            color: white;
+        }
+
+        .select-suficiente {
+            background-color: #FF00FF;
+            color: white;
+        }
+
+        .select-insuficiente {
+            background-color: #FFA500;
+            color: white;
+        }
+
+        .select-default {
+            background-color: white;
+            color: black;
+        }
+
+        .final-score {
+            background-color: #fff3cd;
+            font-weight: bold;
+        }
+
+        .student-row:nth-child(even) td {
+            background-color: #f8f9fa;
+        }
+
+        .student-row:nth-child(even) td:first-child,
+        .student-row:nth-child(even) td:nth-child(2) {
+            background-color: #f8f9fa;
+        }
+
+        .info-text {
+            font-size: 11px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        @media (min-width: 768px) {
+            .info-text {
+                font-size: 12px;
+            }
+        }
+
+        .save-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 12px;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .save-indicator.show {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @media print {
+            .buttons-section,
+            .paste-area,
+            .save-indicator {
+                display: none !important;
+            }
+            
+            .container {
+                box-shadow: none;
+                margin: 0;
+                padding: 20px;
+            }
+            
+            .table-wrapper {
+                max-height: none;
+                overflow: visible;
+                border: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ESCALA DE VALORACIÓN</h1>
+        
+        <div class="header-section">
+            <div class="header-row">
+                <span class="header-label">CENTRO EDUCATIVO:</span>
+                <input type="text" class="header-input" id="centro" placeholder="Nombre del centro educativo">
+            </div>
+            <div class="header-row">
+                <span class="header-label">TEMA:</span>
+                <input type="text" class="header-input" id="tema" placeholder="Tema de la actividad">
+            </div>
+            <div class="header-row">
+                <span class="header-label">ACTIVIDAD:</span>
+                <input type="text" class="header-input" id="actividad" placeholder="Descripción de la actividad">
+            </div>
+            <div class="header-row">
+                <span class="header-label">MÓDULO:</span>
+                <input type="text" class="header-input" id="asignatura" placeholder="Módulo">
+            </div>
+            <div class="header-row">
+                <span class="header-label">VALOR:</span>
+                <input type="number" class="header-input" id="valor" placeholder="Valor total" value="1" min="1" max="100" style="width: 100px;">
+            </div>
+            <div class="header-row">
+                <span class="header-label">PROFESOR/A:</span>
+                <input type="text" class="header-input" id="profesor" placeholder="Nombre del profesor">
+            </div>
+        </div>
+
+        <div class="scale-section">
+            <div class="scale-title">ESCALA:</div>
+            <div class="scale-grid">
+                <div class="scale-item escala-excelente">EXCELENTE<br>4</div>
+                <div class="scale-item escala-bueno">BUENO<br>3</div>
+                <div class="scale-item escala-suficiente">SUFICIENTE<br>2</div>
+                <div class="scale-item escala-insuficiente">INSUFICIENTE<br>1</div>
+            </div>
+        </div>
+
+        <div class="paste-area">
+            <label for="pasteIndicators" style="font-weight: bold; margin-bottom: 5px; display: block;">
+                Pegar indicadores de evaluación:
+            </label>
+            <textarea id="pasteIndicators" placeholder="Pega aquí los indicadores desde Excel u otra fuente (uno por línea, máximo 6)"></textarea>
+            <div class="info-text">Copia los indicadores y pégalos aquí (uno por línea). Luego presiona "Cargar Indicadores"</div>
+        </div>
+
+        <div class="paste-area">
+            <label for="pasteInput" style="font-weight: bold; margin-bottom: 5px; display: block;">
+                Pegar datos de Excel (nombres de estudiantes):
+            </label>
+            <textarea id="pasteInput" placeholder="Pega aquí los nombres de los estudiantes desde Excel (una columna)"></textarea>
+            <div class="info-text">Copia una columna de Excel con los nombres y pégala aquí</div>
+        </div>
+
+        <div class="buttons-section">
+            <button class="btn-primary" onclick="loadIndicators()">Cargar Indicadores</button>
+            <button class="btn-primary" onclick="loadStudents()">Cargar Estudiantes</button>
+            <button class="btn-warning" onclick="manualSave()">💾 Guardar Ahora</button>
+            <button class="btn-primary" onclick="clearStudents()">Limpiar Todo</button>
+            <button class="btn-success" onclick="downloadExcel()">📥 Descargar Excel</button>
+            <button class="btn-info" onclick="generatePDF()">📄 Generar PDF</button>
+        </div>
+
+        <div class="table-wrapper">
+            <table id="evaluationTable">
+                <thead>
+                    <tr id="tableHeader"></tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="save-indicator" id="saveIndicator">
+        ✓ Guardado automáticamente
+    </div>
+
+    <script>
+        // ============================================================
+        // ESCALA DE VALORACIÓN EDUCATIVA v1.0
+        // Compatible con Google Sites y otros sistemas
+        // ============================================================
+        
+        const NUM_STUDENTS = 35;
+        const NUM_INDICATORS = 6;
+        const STORAGE_KEY = 'escalaValoracion_v1'; // Clave única para evitar conflictos
+        let indicatorNames = ['Indicador 1', 'Indicador 2', 'Indicador 3', 'Indicador 4', 'Indicador 5', 'Indicador 6'];
+        let autoSaveTimer;
+
+        // Funciones de guardado
+        function showSaveIndicator() {
+            const indicator = document.getElementById('saveIndicator');
+            indicator.classList.add('show');
+            setTimeout(() => indicator.classList.remove('show'), 2000);
+        }
+
+        function saveToLocalStorage() {
+            try {
+                const data = {
+                    centro: document.getElementById('centro').value,
+                    tema: document.getElementById('tema').value,
+                    actividad: document.getElementById('actividad').value,
+                    asignatura: document.getElementById('asignatura').value,
+                    valor: document.getElementById('valor').value,
+                    profesor: document.getElementById('profesor').value,
+                    indicatorNames: indicatorNames,
+                    students: [],
+                    timestamp: new Date().toISOString()
+                };
+
+                for (let i = 1; i <= NUM_STUDENTS; i++) {
+                    const studentName = document.getElementById(`student_${i}`)?.value || '';
+                    const row = document.getElementById('tableBody').children[i - 1];
+                    if (row) {
+                        const selects = row.querySelectorAll('select');
+                        const scores = Array.from(selects).map(s => s.value);
+                        data.students.push({ name: studentName, scores: scores });
+                    }
+                }
+
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+                console.log('✓ Datos guardados exitosamente:', new Date().toLocaleTimeString());
+                return true;
+            } catch (error) {
+                console.error('Error al guardar datos:', error);
+                return false;
+            }
+        }
+
+        function autoSave() {
+            clearTimeout(autoSaveTimer);
+            autoSaveTimer = setTimeout(() => {
+                saveToLocalStorage();
+                showSaveIndicator();
+            }, 2000);
+        }
+
+        function manualSave() {
+            const success = saveToLocalStorage();
+            if (success) {
+                showSaveIndicator();
+                alert('✓ Datos guardados exitosamente\n\nLos datos se mantienen aunque cierres esta página.');
+            } else {
+                alert('✗ Error al guardar los datos\n\nPor favor, intenta de nuevo.');
+            }
+        }
+
+        // Funciones de tabla
+        function updateTableHeaders() {
+            const header = document.getElementById('tableHeader');
+            header.innerHTML = `
+                <th>No.</th>
+                <th class="student-name">ESTUDIANTE</th>
+                ${indicatorNames.map(name => `<th class="indicator-cell">${name}</th>`).join('')}
+                <th>CALIFICACIÓN FINAL</th>
+            `;
+        }
+
+        function createStudentRow(index) {
+            const row = document.createElement('tr');
+            row.className = 'student-row';
+            
+            let html = `<td>${index}</td>`;
+            html += `<td class="student-name"><input type="text" class="header-input" id="student_${index}" placeholder="Nombre del estudiante ${index}"></td>`;
+            
+            for (let j = 0; j < NUM_INDICATORS; j++) {
+                html += `
+                    <td class="indicator-cell">
+                        <select onchange="calculateTotal(${index}); updateSelectColor(this)" class="select-default">
+                            <option value="0">-</option>
+                            <option value="4">Excelente (4)</option>
+                            <option value="3">Bueno (3)</option>
+                            <option value="2">Suficiente (2)</option>
+                            <option value="1">Insuficiente (1)</option>
+                        </select>
+                    </td>
+                `;
+            }
+            
+            html += `<td class="final-score" id="total_${index}">0.00</td>`;
+            row.innerHTML = html;
+            return row;
+        }
+
+        function initializeTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            for (let i = 1; i <= NUM_STUDENTS; i++) {
+                tbody.appendChild(createStudentRow(i));
+            }
+            
+            updateTableHeaders();
+        }
+
+        function updateSelectColor(selectElement) {
+            const value = selectElement.value;
+            selectElement.className = value === '4' ? 'select-excelente' :
+                                     value === '3' ? 'select-bueno' :
+                                     value === '2' ? 'select-suficiente' :
+                                     value === '1' ? 'select-insuficiente' : 'select-default';
+        }
+
+        function calculateTotal(studentIndex) {
+            const row = document.getElementById('tableBody').children[studentIndex - 1];
+            if (!row) return;
+            
+            const selects = row.querySelectorAll('select');
+            const valorTotal = parseFloat(document.getElementById('valor').value) || 1;
+            
+            let sum = 0, count = 0;
+            selects.forEach(select => {
+                const value = parseFloat(select.value);
+                if (value > 0) {
+                    sum += value;
+                    count++;
+                }
+            });
+            
+            const finalScore = count > 0 ? (sum / count / 4) * valorTotal : 0;
+            document.getElementById(`total_${studentIndex}`).textContent = finalScore.toFixed(2);
+        }
+
+        function recalculateAllTotals() {
+            for (let i = 1; i <= NUM_STUDENTS; i++) {
+                calculateTotal(i);
+            }
+        }
+
+        // Funciones de carga
+        function loadIndicators() {
+            const pasteData = document.getElementById('pasteIndicators').value.trim();
+            if (!pasteData) {
+                alert('Por favor, pega los indicadores primero.');
+                return;
+            }
+            
+            const lines = pasteData.split('\n').filter(line => line.trim() !== '');
+            for (let i = 0; i < Math.min(lines.length, NUM_INDICATORS); i++) {
+                indicatorNames[i] = lines[i].trim();
+            }
+            
+            updateTableHeaders();
+            document.getElementById('pasteIndicators').value = '';
+            autoSave();
+            alert(`${Math.min(lines.length, NUM_INDICATORS)} indicadores cargados exitosamente.`);
+        }
+
+        function loadStudents() {
+            const pasteData = document.getElementById('pasteInput').value.trim();
+            if (!pasteData) {
+                alert('Por favor, pega los nombres de los estudiantes primero.');
+                return;
+            }
+            
+            const lines = pasteData.split('\n').filter(line => line.trim() !== '');
+            
+            // Buscar el primer espacio vacío
+            let startIndex = 1;
+            for (let i = 1; i <= NUM_STUDENTS; i++) {
+                const studentInput = document.getElementById(`student_${i}`);
+                if (studentInput && studentInput.value.trim() === '') {
+                    startIndex = i;
+                    break;
+                }
+            }
+            
+            // Agregar estudiantes desde el primer espacio vacío
+            let addedCount = 0;
+            for (let i = 0; i < lines.length && (startIndex + i) <= NUM_STUDENTS; i++) {
+                const studentInput = document.getElementById(`student_${startIndex + i}`);
+                if (studentInput) {
+                    studentInput.value = lines[i].trim();
+                    addedCount++;
+                }
+            }
+            
+            document.getElementById('pasteInput').value = '';
+            autoSave();
+            
+            if (addedCount < lines.length) {
+                alert(`Se agregaron ${addedCount} de ${lines.length} estudiantes. Se alcanzó el límite de ${NUM_STUDENTS} estudiantes.`);
+            } else {
+                alert(`${addedCount} estudiantes agregados exitosamente a partir de la posición ${startIndex}.`);
+            }
+        }
+
+        function clearStudents() {
+            if (confirm('¿Estás seguro de que deseas limpiar todos los datos? Esta acción también borrará los datos guardados.')) {
+                indicatorNames = ['Indicador 1', 'Indicador 2', 'Indicador 3', 'Indicador 4', 'Indicador 5', 'Indicador 6'];
+                document.getElementById('pasteInput').value = '';
+                document.getElementById('pasteIndicators').value = '';
+                document.getElementById('centro').value = '';
+                document.getElementById('tema').value = '';
+                document.getElementById('actividad').value = '';
+                document.getElementById('asignatura').value = '';
+                document.getElementById('valor').value = '1';
+                document.getElementById('profesor').value = '';
+                localStorage.removeItem(STORAGE_KEY);
+                initializeTable();
+            }
+        }
+
+        function loadSavedSession() {
+            try {
+                const savedData = localStorage.getItem(STORAGE_KEY);
+                if (!savedData) {
+                    console.log('ℹ No hay datos guardados para recuperar');
+                    return;
+                }
+
+                const data = JSON.parse(savedData);
+                console.log('✓ Cargando datos guardados:', data.timestamp || 'sin fecha');
+                
+                document.getElementById('centro').value = data.centro || '';
+                document.getElementById('tema').value = data.tema || '';
+                document.getElementById('actividad').value = data.actividad || '';
+                document.getElementById('asignatura').value = data.asignatura || '';
+                document.getElementById('valor').value = data.valor || '1';
+                document.getElementById('profesor').value = data.profesor || '';
+                
+                if (data.indicatorNames) {
+                    indicatorNames = data.indicatorNames;
+                    updateTableHeaders();
+                }
+
+                if (data.students) {
+                    data.students.forEach((student, index) => {
+                        const i = index + 1;
+                        const studentInput = document.getElementById(`student_${i}`);
+                        if (studentInput) studentInput.value = student.name || '';
+                        
+                        const row = document.getElementById('tableBody').children[index];
+                        if (row) {
+                            const selects = row.querySelectorAll('select');
+                            student.scores.forEach((score, idx) => {
+                                if (selects[idx]) {
+                                    selects[idx].value = score;
+                                    updateSelectColor(selects[idx]);
+                                }
+                            });
+                            calculateTotal(i);
+                        }
+                    });
+                }
+                
+                console.log('✓ Datos cargados exitosamente');
+            } catch (error) {
+                console.error('✗ Error al cargar datos guardados:', error);
+            }
+        }
+
+        function setupAutoSaveListeners() {
+            ['centro', 'tema', 'actividad', 'asignatura', 'valor', 'profesor'].forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('input', autoSave);
+                    element.addEventListener('change', autoSave);
+                }
+            });
+            
+            const tableBody = document.getElementById('tableBody');
+            if (tableBody) {
+                tableBody.addEventListener('change', autoSave);
+                tableBody.addEventListener('input', autoSave);
+            }
+            
+            const valorInput = document.getElementById('valor');
+            if (valorInput) {
+                valorInput.addEventListener('input', recalculateAllTotals);
+            }
+            
+            // Guardar antes de salir de la página
+            window.addEventListener('beforeunload', function(e) {
+                saveToLocalStorage();
+            });
+            
+            // Guardar cuando la página pierde el foco
+            window.addEventListener('blur', function() {
+                saveToLocalStorage();
+            });
+            
+            // Guardar periódicamente cada 30 segundos como respaldo
+            setInterval(function() {
+                saveToLocalStorage();
+            }, 30000);
+        }
+
+        function downloadExcel() {
+            const data = [];
+            data.push(['ESCALA DE VALORACIÓN']);
+            data.push([]);
+            data.push(['CENTRO EDUCATIVO:', document.getElementById('centro').value]);
+            data.push(['TEMA:', document.getElementById('tema').value]);
+            data.push(['ACTIVIDAD:', document.getElementById('actividad').value]);
+            data.push(['MÓDULO:', document.getElementById('asignatura').value]);
+            data.push(['VALOR:', document.getElementById('valor').value]);
+            data.push(['PROFESOR/A:', document.getElementById('profesor').value]);
+            data.push([]);
+            data.push(['ESCALA: EXCELENTE (4)', 'BUENO (3)', 'SUFICIENTE (2)', 'INSUFICIENTE (1)']);
+            data.push([]);
+            data.push(['No.', 'ESTUDIANTE', ...indicatorNames, 'CALIFICACIÓN FINAL']);
+            
+            document.querySelectorAll('#tableBody tr').forEach((row, index) => {
+                const studentName = document.getElementById(`student_${index + 1}`).value;
+                if (studentName.trim() !== '') {
+                    const rowData = [index + 1, studentName];
+                    row.querySelectorAll('select').forEach(select => {
+                        rowData.push(select.value === '0' ? '-' : select.options[select.selectedIndex].text);
+                    });
+                    rowData.push(document.getElementById(`total_${index + 1}`).textContent);
+                    data.push(rowData);
+                }
+            });
+            
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            ws['!cols'] = [{ wch: 5 }, { wch: 30 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 20 }, { wch: 18 }];
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Escala de Valoración');
+            XLSX.writeFile(wb, `Escala_Valoracion_${document.getElementById('tema').value.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`);
+        }
+
+        function generatePDF() {
+            const element = document.querySelector('.container');
+            const buttons = document.querySelector('.buttons-section');
+            const pasteAreas = document.querySelectorAll('.paste-area');
+            const tableWrapper = document.querySelector('.table-wrapper');
+            const tbody = document.getElementById('tableBody');
+            
+            // Ocultar elementos no deseados en el PDF
+            buttons.style.display = 'none';
+            pasteAreas.forEach(area => area.style.display = 'none');
+            
+            // Ocultar filas de estudiantes vacías
+            const rows = tbody.querySelectorAll('tr');
+            const hiddenRows = [];
+            rows.forEach((row, index) => {
+                const studentName = document.getElementById(`student_${index + 1}`)?.value.trim();
+                if (!studentName || studentName === '') {
+                    row.style.display = 'none';
+                    hiddenRows.push(row);
+                }
+            });
+            
+            // Remover restricciones de altura para mostrar todo el contenido
+            const originalMaxHeight = tableWrapper.style.maxHeight;
+            const originalOverflow = tableWrapper.style.overflow;
+            tableWrapper.style.maxHeight = 'none';
+            tableWrapper.style.overflow = 'visible';
+            
+            const opt = {
+                margin: 10,
+                filename: `Escala_Valoracion_${document.getElementById('tema').value.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { 
+                    scale: 2, 
+                    useCORS: true,
+                    scrollY: 0,
+                    scrollX: 0,
+                    windowHeight: document.documentElement.scrollHeight
+                },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                // Restaurar estilos originales
+                buttons.style.display = '';
+                pasteAreas.forEach(area => area.style.display = '');
+                tableWrapper.style.maxHeight = originalMaxHeight;
+                tableWrapper.style.overflow = originalOverflow;
+                
+                // Mostrar de nuevo las filas que estaban ocultas
+                hiddenRows.forEach(row => row.style.display = '');
+            });
+        }
+
+        // Inicialización - Múltiples métodos para compatibilidad con Google Sites
+        (function() {
+            let initialized = false;
+            
+            function initApp() {
+                if (initialized) return;
+                
+                // Verificar que los elementos existen
+                const tableBody = document.getElementById('tableBody');
+                const centro = document.getElementById('centro');
+                
+                if (!tableBody || !centro) {
+                    console.log('Esperando que los elementos estén disponibles...');
+                    setTimeout(initApp, 100);
+                    return;
+                }
+                
+                initialized = true;
+                console.log('Inicializando aplicación...');
+                initializeTable();
+                setupAutoSaveListeners();
+                
+                // Pequeño delay antes de cargar para asegurar que todo está listo
+                setTimeout(loadSavedSession, 200);
+            }
+
+            // Múltiples métodos de inicialización
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initApp);
+            } else if (document.readyState === 'interactive' || document.readyState === 'complete') {
+                initApp();
+            }
+
+            window.addEventListener('load', function() {
+                setTimeout(initApp, 100);
+            });
+            
+            // Fallback final
+            setTimeout(initApp, 500);
+        })();
+    </script>
+</body>
+</html>
