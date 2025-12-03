@@ -489,10 +489,8 @@
         <div class="buttons-section">
             <button class="btn-primary" onclick="loadIndicators()">Cargar Indicadores</button>
             <button class="btn-primary" onclick="loadStudents()">Cargar Estudiantes</button>
-            <button class="btn-warning" onclick="manualSave()">💾 Guardar Ahora</button>
-            <button class="btn-success" onclick="saveToGoogleSheets()">☁️ Guardar en Google Sheets</button>
             <button class="btn-primary" onclick="clearStudents()">Limpiar Todo</button>
-            <button class="btn-success" onclick="downloadExcel()">📥 Descargar Excel</button>
+            <button class="btn-danger" onclick="clearGoogleSheet()">🗑️ Limpiar Google Sheet</button>
             <button class="btn-info" onclick="generatePDF()">📄 Generar PDF</button>
         </div>
 
@@ -567,6 +565,7 @@
             clearTimeout(autoSaveTimer);
             autoSaveTimer = setTimeout(() => {
                 saveToLocalStorage();
+                saveToGoogleSheets(); // Guardado automático en Google Sheets
                 showSaveIndicator();
             }, 2000);
         }
@@ -581,21 +580,8 @@
             }
         }
 
-        // Función para guardar en Google Sheets
+        // Función para guardar en Google Sheets (ahora silenciosa y automática)
         async function saveToGoogleSheets() {
-            // Validar que haya datos para guardar
-            const tema = document.getElementById('tema').value.trim();
-            if (!tema) {
-                alert('⚠️ Por favor, completa al menos el campo TEMA antes de guardar en Google Sheets.');
-                return;
-            }
-
-            // Mostrar indicador de carga
-            const saveBtn = event.target;
-            const originalText = saveBtn.innerHTML;
-            saveBtn.innerHTML = '⏳ Guardando...';
-            saveBtn.disabled = true;
-
             const data = {
                 centro: document.getElementById('centro').value,
                 tema: document.getElementById('tema').value,
@@ -618,7 +604,7 @@
             }
 
             try {
-                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
                     mode: 'no-cors',
                     headers: {
@@ -627,15 +613,30 @@
                     body: JSON.stringify(data)
                 });
                 
-                // Con mode: 'no-cors', no podemos leer la respuesta, pero si no hay error, asumimos éxito
-                saveBtn.innerHTML = originalText;
-                saveBtn.disabled = false;
-                alert('✓ Datos enviados a Google Sheets exitosamente\n\nRevisa tu hoja de cálculo para confirmar.');
+                console.log('✓ Datos sincronizados con Google Sheets:', new Date().toLocaleTimeString());
                 
             } catch (error) {
-                saveBtn.innerHTML = originalText;
-                saveBtn.disabled = false;
-                alert('✗ Error al conectar con Google Sheets:\n\n' + error.message + '\n\nVerifica que la URL del script sea correcta.');
+                console.error('✗ Error al sincronizar con Google Sheets:', error);
+            }
+        }
+
+        // Función para limpiar Google Sheet
+        async function clearGoogleSheet() {
+            if (!confirm('⚠️ ¿Estás seguro de que deseas ELIMINAR todos los datos de Google Sheet?\n\nEsta acción NO afectará los datos guardados localmente en tu navegador.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL + '?action=clear', {
+                    method: 'GET',
+                    mode: 'no-cors'
+                });
+                
+                alert('✓ Google Sheet limpiada exitosamente\n\nLos datos locales siguen intactos.');
+                console.log('✓ Google Sheet limpiada');
+                
+            } catch (error) {
+                alert('✗ Error al limpiar Google Sheet:\n\n' + error.message);
                 console.error('Error:', error);
             }
         }
